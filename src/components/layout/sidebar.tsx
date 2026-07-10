@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   HardDrive,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +28,7 @@ const NAV = [
   { href: "/proposals", label: "Proposals", icon: FileSignature },
   { href: "/reminders", label: "Reminders", icon: Bell },
   { href: "/drive", label: "Google Drive", icon: HardDrive },
+  { href: "/openwa", label: "WhatsApp", icon: MessageSquare },
   { href: "/chatbot", label: "Assistant", icon: Bot },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
   { href: "/settings", label: "Settings", icon: Settings },

@@ -24,6 +24,7 @@ const TITLES: Record<string, string> = {
   analytics: "Analytics",
   activity: "Activity",
   drive: "Google Drive",
+  openwa: "WhatsApp",
 };
 
 function titleFor(pathname: string): string {
