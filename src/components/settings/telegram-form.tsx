@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bot, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import { Bot, CheckCircle, AlertCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFormAction } from "@/lib/use-form-action";
 import { Input, Field } from "@/components/ui/input";
@@ -18,6 +18,12 @@ interface TelegramStatus {
   chatId: string | null;
 }
 
+interface WebhookInfo {
+  url: string;
+  pending_update_count: number;
+  last_error_message: string | null;
+}
+
 export function TelegramForm({ chatId }: { chatId: string }) {
   const { toast } = useToast();
   const [state, formAction, pending] = useFormAction<
@@ -31,6 +37,8 @@ export function TelegramForm({ chatId }: { chatId: string }) {
   } | null>(null);
   const [setupPending, setSetupPending] = useState(false);
   const [status, setStatus] = useState<TelegramStatus | null>(null);
+  const [webhookInfo, setWebhookInfo] = useState<WebhookInfo | null>(null);
+  const [verifyPending, setVerifyPending] = useState(false);
 
   useEffect(() => {
     getTelegramStatusAction().then(setStatus);
@@ -60,6 +68,28 @@ export function TelegramForm({ chatId }: { chatId: string }) {
       toast("Webhook setup failed", "error");
     } finally {
       setSetupPending(false);
+    }
+  }
+
+  async function handleVerify() {
+    setVerifyPending(true);
+    try {
+      const res = await fetch("/api/telegram/webhook/setup");
+      const data = await res.json();
+      if (data.ok && data.result) {
+        setWebhookInfo(data.result);
+        if (data.result.url) {
+          toast(`Webhook active: ${data.result.url}`, "success");
+        } else {
+          toast("No webhook registered. Click Connect AI Assistant.", "error");
+        }
+      } else {
+        toast(data.error ?? "Failed to check webhook", "error");
+      }
+    } catch {
+      toast("Failed to verify webhook", "error");
+    } finally {
+      setVerifyPending(false);
     }
   }
 
@@ -107,22 +137,61 @@ export function TelegramForm({ chatId }: { chatId: string }) {
           the AI assistant. You&apos;ll be able to message your bot directly and
           it will respond with the same capabilities as the web assistant.
         </p>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="mt-3"
-          loading={setupPending}
-          onClick={handleSetupWebhook}
-        >
-          <Bot className="mr-1 h-4 w-4" />
-          Connect AI Assistant
-        </Button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            loading={setupPending}
+            onClick={handleSetupWebhook}
+          >
+            <Bot className="mr-1 h-4 w-4" />
+            Connect AI Assistant
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            loading={verifyPending}
+            onClick={handleVerify}
+          >
+            <RefreshCw className="mr-1 h-4 w-4" />
+            Verify Webhook
+          </Button>
+        </div>
+
+        {webhookInfo && (
+          <div className="mt-3 rounded-lg border border-surface-border bg-surface p-3 text-xs">
+            <div className="flex items-center gap-2">
+              {webhookInfo.url ? (
+                <Wifi className="h-3.5 w-3.5 text-green-600" />
+              ) : (
+                <WifiOff className="h-3.5 w-3.5 text-red-500" />
+              )}
+              <span className="font-medium text-ink">
+                {webhookInfo.url ? "Webhook active" : "No webhook registered"}
+              </span>
+            </div>
+            {webhookInfo.url && (
+              <p className="mt-1 text-ink-soft truncate">{webhookInfo.url}</p>
+            )}
+            {webhookInfo.pending_update_count > 0 && (
+              <p className="mt-1 text-amber-600">
+                {webhookInfo.pending_update_count} pending updates
+              </p>
+            )}
+            {webhookInfo.last_error_message && (
+              <p className="mt-1 text-red-600">
+                Last error: {webhookInfo.last_error_message}
+              </p>
+            )}
+          </div>
+        )}
 
         {webhookState?.ok && (
           <div className="mt-2 flex items-center gap-2 text-xs text-green-600">
             <CheckCircle className="h-3.5 w-3.5" />
-            Connected
+            Webhook registered
           </div>
         )}
         {webhookState?.error && (
@@ -135,7 +204,7 @@ export function TelegramForm({ chatId }: { chatId: string }) {
                   <p className="mt-1">
                     For local development, use{" "}
                     <code className="rounded bg-amber-100 px-1">ngrok http 3000</code>{" "}
-                    and set <code className="rounded bg-amber-100 px-1">NEXT_PUBLIC_APP_URL</code>{" "}
+                    and set <code className="rounded bg-amber-100 px-1">APP_URL</code>{" "}
                     to the ngrok HTTPS URL.
                   </p>
                 )}
