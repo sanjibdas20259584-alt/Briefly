@@ -405,9 +405,9 @@ export async function setupTelegramWebhookAction() {
     return { ok: false, error: "No Telegram bot token configured. Save it first." } as const;
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL;
   if (!appUrl) {
-    return { ok: false, error: "NEXT_PUBLIC_APP_URL is not set in environment." } as const;
+    return { ok: false, error: "APP_URL is not set in environment." } as const;
   }
 
   const webhookUrl = `${appUrl.replace(/\/$/, "")}/api/telegram/webhook`;
