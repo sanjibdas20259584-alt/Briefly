@@ -234,3 +234,18 @@ export interface GoogleDriveAbout {
   user: { displayName: string; emailAddress: string };
   storageQuota: { limit: string; usage: string };
 }
+
+// AI Memory
+export type MemoryCategory = 'general' | 'project' | 'client' | 'preference' | 'instruction' | 'fact' | 'goal';
+
+export interface AiMemory {
+  id: string;
+  user_id: string;
+  category: MemoryCategory;
+  content: string;
+  importance: number;
+  source: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}

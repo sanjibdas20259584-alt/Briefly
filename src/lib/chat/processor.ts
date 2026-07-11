@@ -12,6 +12,7 @@ import {
 } from "@/lib/providers/validate";
 import { buildSystemPrompt, toolsAsOpenAI } from "@/lib/chat/tools";
 import { executeChatTool } from "@/lib/chat/execute-tool";
+import { getImportantMemories, formatMemoriesForPrompt, autoSaveMemories } from "@/lib/chat/memory";
 
 const CHAT_TIMEOUT_MS = 30_000;
 const MAX_TOOL_ROUNDS = 3;
@@ -236,7 +237,9 @@ export async function processChatMessage(
   }
 
   const ctx = await loadBusinessContext(userId);
-  const systemPrompt = buildSystemPrompt(ctx);
+  const importantMemories = await getImportantMemories(userId, 15);
+  const memoriesText = formatMemoriesForPrompt(importantMemories);
+  const systemPrompt = buildSystemPrompt(ctx) + (memoriesText ? `\n\nLONG-TERM MEMORY:\n${memoriesText}` : "");
 
   let conversation: ChatMessage[] = [
     { role: "system", content: systemPrompt },
@@ -326,5 +329,10 @@ export async function processChatMessage(
     return { content: fallback, toolCalls: toolTrace };
   }
 
-  return { content: final.message.content ?? "Done.", toolCalls: toolTrace };
+  const replyContent = final.message.content ?? "Done.";
+
+  // Auto-save important memories from the conversation (fire and forget)
+  autoSaveMemories(userId, userMessage, replyContent).catch(() => {});
+
+  return { content: replyContent, toolCalls: toolTrace };
 }

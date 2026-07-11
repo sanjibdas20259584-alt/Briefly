@@ -374,15 +374,17 @@ export const CHAT_TOOLS: FunctionDefinition[] = [
 ];
 
 export function toolsAsOpenAI(): { type: "function"; function: FunctionDefinition }[] {
-  // Import Google Drive tools dynamically to avoid circular deps
   const allTools = [...CHAT_TOOLS];
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { GOOGLE_DRIVE_TOOLS } = require("@/lib/google-drive/tools");
     allTools.push(...GOOGLE_DRIVE_TOOLS);
-  } catch {
-    // Google Drive not available
-  }
+  } catch {}
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { MEMORY_TOOLS } = require("@/lib/chat/memory-tools");
+    allTools.push(...MEMORY_TOOLS);
+  } catch {}
   return allTools.map((f) => ({ type: "function" as const, function: f }));
 }
 
@@ -419,5 +421,11 @@ export function buildSystemPrompt(ctx: {
     `You also have access to the user's Google Drive (gdrive_* tools). You can list, search,`,
     `read, create, rename, move, delete, share, and trash files and folders. Use these tools`,
     `when the user asks about their files, documents, or wants to manage Google Drive.`,
+    ``,
+    `You have a LONG-TERM MEMORY (memory_* tools). You can save, search, and manage memories.`,
+    `IMPORTANT: When the user tells you something important about themselves, their projects,`,
+    `preferences, instructions, or goals — ALWAYS save it to memory using memory_save.`,
+    `Before answering questions about past work, search memory first using memory_search.`,
+    `Your memory persists across all conversations — you remember everything.`,
   ].join("\n");
 }

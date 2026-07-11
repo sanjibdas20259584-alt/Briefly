@@ -332,6 +332,11 @@ export async function executeChatTool(
       }
 
       default:
+        // Try memory tools
+        if (name.startsWith("memory_")) {
+          const { executeMemoryTool } = await import("@/lib/chat/memory-tools");
+          return executeMemoryTool(name, args, uid);
+        }
         // Try Google Drive tools
         if (name.startsWith("gdrive_")) {
           const { executeGDriveTool } = await import("@/lib/google-drive/tools");
