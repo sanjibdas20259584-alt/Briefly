@@ -7,6 +7,11 @@ import {
   Bell,
   Plus,
   ArrowRight,
+  AlertTriangle,
+  Clock,
+  TrendingUp,
+  Sparkles,
+  Calendar,
 } from "lucide-react";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { getDashboardStats } from "@/lib/queries/dashboard";
@@ -22,6 +27,14 @@ const QUICK_ACTIONS = [
   { href: "/invoices?new=1", label: "Invoice", icon: FileText },
   { href: "/proposals?new=1", label: "Proposal", icon: Plus },
 ];
+
+function money(n: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(n);
+}
 
 export default async function DashboardPage() {
   const supabase = await getServerSupabase();
@@ -39,8 +52,11 @@ export default async function DashboardPage() {
 
   const [stats, activity] = await Promise.all([
     getDashboardStats(),
-    getRecentActivity(7),
+    getRecentActivity(8),
   ]);
+
+  const hasData = stats.activeClients > 0 || stats.activeProjects > 0;
+  const needsAttention = stats.unpaidInvoices > 0 || stats.upcomingReminders > 0;
 
   const StatCard = ({
     label,
@@ -48,37 +64,71 @@ export default async function DashboardPage() {
     sub,
     icon: Icon,
     href,
+    accent,
   }: {
     label: string;
     value: string | number;
     sub?: string;
     icon: React.ComponentType<{ className?: string }>;
     href: string;
+    accent?: boolean;
   }) => (
     <Link href={href}>
-      <Card hoverable className="p-5">
+      <Card hoverable className={`p-4 sm:p-5 ${accent ? "border-accent/30" : ""}`}>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-ink-soft">{label}</span>
-          <Icon className="h-4 w-4 text-ink-muted" />
+          <span className="text-xs sm:text-sm text-ink-soft">{label}</span>
+          <Icon className={`h-4 w-4 ${accent ? "text-accent" : "text-ink-muted"}`} />
         </div>
-        <p className="mt-2 text-2xl font-semibold text-ink">{value}</p>
+        <p className="mt-2 text-xl sm:text-2xl font-semibold text-ink">{value}</p>
         {sub && <p className="mt-1 text-xs text-ink-soft">{sub}</p>}
       </Card>
     </Link>
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-6 sm:space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-ink">
+        <h1 className="text-lg sm:text-xl font-semibold text-ink">
           Welcome back, {ownerName}
         </h1>
         <p className="mt-1 text-sm text-ink-soft">
-          Here&#39;s what needs your attention today.
+          {needsAttention
+            ? "You have items that need your attention."
+            : hasData
+              ? "Here's your business overview."
+              : "Let's get your freelancing workspace set up."}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {/* Attention Banner */}
+      {needsAttention && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Needs attention
+              </p>
+              <div className="mt-1 flex flex-wrap gap-3 text-sm text-amber-700 dark:text-amber-300">
+                {stats.unpaidInvoices > 0 && (
+                  <Link href="/invoices" className="hover:underline">
+                    {stats.unpaidInvoices} unpaid invoice{stats.unpaidInvoices > 1 ? "s" : ""} ({money(stats.unpaidAmount)})
+                  </Link>
+                )}
+                {stats.upcomingReminders > 0 && (
+                  <Link href="/reminders" className="hover:underline">
+                    {stats.upcomingReminders} upcoming reminder{stats.upcomingReminders > 1 ? "s" : ""}
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Active clients"
           value={stats.activeClients}
@@ -94,44 +144,54 @@ export default async function DashboardPage() {
         <StatCard
           label="Unpaid invoices"
           value={stats.unpaidInvoices}
-          sub={`${new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            maximumFractionDigits: 0,
-          }).format(stats.unpaidAmount)} outstanding`}
+          sub={stats.unpaidAmount > 0 ? `${money(stats.unpaidAmount)} outstanding` : undefined}
           icon={FileText}
           href="/invoices"
+          accent={stats.unpaidInvoices > 0}
         />
         <StatCard
           label="Upcoming reminders"
           value={stats.upcomingReminders}
           icon={Bell}
           href="/reminders"
+          accent={stats.upcomingReminders > 0}
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Main content grid */}
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+        {/* Recent Activity */}
         <div className="lg:col-span-2">
           <Card>
-            <div className="flex items-center justify-between border-b border-surface-border p-5">
-              <h2 className="text-base font-semibold text-ink">Recent activity</h2>
+            <div className="flex items-center justify-between border-b border-surface-border px-4 py-3 sm:px-5 sm:py-4">
+              <h2 className="text-sm sm:text-base font-semibold text-ink">Recent activity</h2>
               <Link
                 href="/activity"
-                className="flex items-center gap-1 text-sm text-ink-soft transition-colors hover:text-ink"
+                className="flex items-center gap-1 text-xs sm:text-sm text-ink-soft transition-colors hover:text-ink"
               >
                 View all <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-            <CardBody className="space-y-1 p-2">
+            <CardBody className="p-1 sm:p-2">
               {activity.length === 0 ? (
-                <p className="px-4 py-6 text-center text-sm text-ink-soft">
-                  No activity yet. Create a client or project to get started.
-                </p>
+                <div className="flex flex-col items-center py-10 text-center">
+                  <Clock className="h-10 w-10 text-ink-muted empty-state-icon" />
+                  <p className="mt-3 text-sm font-medium text-ink">No activity yet</p>
+                  <p className="mt-1 text-xs text-ink-soft">
+                    Create a client or project to get started.
+                  </p>
+                  <Link href="/clients?new=1" className="mt-3">
+                    <Button size="sm">
+                      <Plus className="mr-1 h-3.5 w-3.5" />
+                      Add Client
+                    </Button>
+                  </Link>
+                </div>
               ) : (
                 activity.map((a) => (
                   <div
                     key={a.id}
-                    className="flex items-center gap-3 rounded-lg px-4 py-2.5 hover:bg-surface"
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 sm:px-4 active:bg-surface"
                   >
                     <div className="h-2 w-2 shrink-0 rounded-full bg-accent" />
                     <div className="min-w-0 flex-1">
@@ -143,10 +203,7 @@ export default async function DashboardPage() {
                       </p>
                     </div>
                     <span className="shrink-0 text-xs text-ink-muted">
-                      {formatDateTime(a.created_at, "").replace(
-                        /,.*/,
-                        ""
-                      )}
+                      {formatDateTime(a.created_at, "").replace(/,.*/, "")}
                     </span>
                   </div>
                 ))
@@ -155,22 +212,23 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
+        {/* Quick Actions */}
         <div>
           <Card>
-            <div className="border-b border-surface-border p-5">
-              <h2 className="text-base font-semibold text-ink">Quick actions</h2>
-              <p className="mt-1 text-sm text-ink-soft">
-                Start something new, {ownerName}.
+            <div className="border-b border-surface-border px-4 py-3 sm:px-5 sm:py-4">
+              <h2 className="text-sm sm:text-base font-semibold text-ink">Quick actions</h2>
+              <p className="mt-1 text-xs sm:text-sm text-ink-soft">
+                Start something new.
               </p>
             </div>
-            <CardBody className="grid grid-cols-2 gap-3">
+            <CardBody className="grid grid-cols-2 gap-2 p-3 sm:gap-3 sm:p-4">
               {QUICK_ACTIONS.map((qa) => {
                 const Icon = qa.icon;
                 return (
                   <Link key={qa.href} href={qa.href}>
-                    <div className="flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-surface-border bg-surface p-4 text-center transition-colors hover:border-accent/40 hover:bg-accent-subtle">
+                    <div className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-surface-border bg-surface p-3 sm:p-4 text-center transition-all active:scale-[0.97] active:bg-accent-subtle hover:border-accent/40 hover:bg-accent-subtle">
                       <Icon className="h-5 w-5 text-accent-hover" />
-                      <span className="text-sm font-medium text-ink">
+                      <span className="text-xs sm:text-sm font-medium text-ink">
                         New {qa.label}
                       </span>
                     </div>
@@ -179,20 +237,25 @@ export default async function DashboardPage() {
               })}
             </CardBody>
           </Card>
-        </div>
-      </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Link href="/clients">
-          <Button variant="secondary" size="sm">
-            Go to clients
-          </Button>
-        </Link>
-        <Link href="/reminders">
-          <Button variant="secondary" size="sm">
-            Manage reminders
-          </Button>
-        </Link>
+          {/* Assistant Card */}
+          <Card className="mt-4">
+            <Link href="/chatbot">
+              <CardBody className="flex items-center gap-3 p-4 transition-colors hover:bg-surface active:bg-surface">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-ink">AI Assistant</p>
+                  <p className="text-xs text-ink-soft">
+                    Ask anything about your business
+                  </p>
+                </div>
+                <ArrowRight className="h-4 w-4 shrink-0 text-ink-muted" />
+              </CardBody>
+            </Link>
+          </Card>
+        </div>
       </div>
     </div>
   );
