@@ -31,6 +31,7 @@ export interface AppSettings {
   telegram_chat_id: string | null;
   telegram_bot_token_enc: string | null;
   theme: ThemePreference;
+  currency: string;
   created_at: string;
   updated_at: string;
 }
@@ -78,6 +79,8 @@ export interface Project {
   due_date: string | null;
   progress: number;
   proposal_id: string | null;
+  template_id: string | null;
+  time_estimate: number | null;
   checklist: ChecklistItem[];
   milestones: Milestone[];
   created_at: string;
@@ -210,6 +213,62 @@ export interface ActivityLog {
   created_at: string;
 }
 
+// Time Tracking
+export interface TimeEntry {
+  id: string;
+  user_id: string;
+  project_id: string | null;
+  task: string | null;
+  description: string | null;
+  started_at: string;
+  ended_at: string | null;
+  duration: number | null; // seconds
+  billable: boolean;
+  rate: number | null;
+  created_at: string;
+}
+
+// Project Templates
+export interface ProjectTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  status: ProjectStatus;
+  priority: ProjectPriority;
+  checklist: ChecklistItem[];
+  milestones: Milestone[];
+  created_at: string;
+}
+
+// Expenses
+export type ExpenseCategory =
+  | "software"
+  | "hardware"
+  | "travel"
+  | "office"
+  | "marketing"
+  | "professional"
+  | "utilities"
+  | "insurance"
+  | "tax"
+  | "other";
+
+export interface Expense {
+  id: string;
+  user_id: string;
+  client_id: string | null;
+  project_id: string | null;
+  description: string;
+  amount: number;
+  category: ExpenseCategory;
+  date: string;
+  receipt_url: string | null;
+  notes: string | null;
+  currency: string;
+  created_at: string;
+}
+
 // Google Drive
 export interface GoogleDriveFile {
   id: string;
@@ -235,6 +294,62 @@ export interface GoogleDriveAbout {
   storageQuota: { limit: string; usage: string };
 }
 
+// Calendar
+export interface CalendarEvent {
+  id: string;
+  user_id: string;
+  client_id: string | null;
+  project_id: string | null;
+  title: string;
+  description: string | null;
+  start_time: string;
+  end_time: string | null;
+  all_day: boolean;
+  color: string | null;
+  reminder: boolean;
+  created_at: string;
+}
+
+// Interactions
+export type InteractionType = "call" | "email" | "meeting" | "whatsapp" | "note" | "other";
+
+export interface Interaction {
+  id: string;
+  user_id: string;
+  client_id: string | null;
+  type: InteractionType;
+  subject: string | null;
+  content: string | null;
+  duration: number | null;
+  outcome: string | null;
+  scheduled_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+// Custom Fields
+export type CustomFieldType = "text" | "number" | "date" | "select" | "checkbox";
+
+export interface CustomField {
+  id: string;
+  user_id: string;
+  entity_type: string;
+  field_name: string;
+  field_type: CustomFieldType;
+  options: string[] | null;
+  position: number;
+  created_at: string;
+}
+
+export interface CustomFieldValue {
+  id: string;
+  user_id: string;
+  field_id: string;
+  entity_id: string;
+  value: string | null;
+  created_at: string;
+}
+
 // AI Memory
 export type MemoryCategory = 'general' | 'project' | 'client' | 'preference' | 'instruction' | 'fact' | 'goal';
 
@@ -248,4 +363,55 @@ export interface AiMemory {
   tags: string[];
   created_at: string;
   updated_at: string;
+}
+
+export interface FileAttachment {
+  id: string;
+  user_id: string;
+  entity_type: "client" | "project" | "invoice" | "proposal";
+  entity_id: string;
+  file_name: string;
+  file_url: string;
+  file_size: number | null;
+  mime_type: string | null;
+  folder: string | null;
+  version: number;
+  created_at: string;
+}
+
+export interface PortalToken {
+  id: string;
+  user_id: string;
+  client_id: string | null;
+  token: string;
+  expires_at: string | null;
+  created_at: string;
+}
+
+// Automation
+export type TriggerType =
+  | "invoice_overdue"
+  | "project_completed"
+  | "client_inactive"
+  | "reminder_due"
+  | "custom";
+
+export type ActionType =
+  | "send_telegram"
+  | "create_reminder"
+  | "update_status"
+  | "send_email"
+  | "webhook";
+
+export interface AutomationRule {
+  id: string;
+  user_id: string;
+  name: string;
+  trigger_type: TriggerType;
+  trigger_config: Record<string, unknown> | null;
+  action_type: ActionType;
+  action_config: Record<string, unknown> | null;
+  enabled: boolean;
+  last_run: string | null;
+  created_at: string;
 }

@@ -13,7 +13,8 @@ import { ConfirmDialog } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/toast";
 import { deleteProjectAction } from "@/lib/actions/projects";
 import { formatDate, formatMoney } from "@/lib/utils";
-import type { Project, Client, Invoice, Reminder, Proposal } from "@/lib/types";
+import type { Project, Client, Invoice, Reminder, Proposal, TimeEntry } from "@/lib/types";
+import { TimeTracker } from "@/components/projects/time-tracker";
 
 export function ProjectDetailClient({
   project,
@@ -22,6 +23,8 @@ export function ProjectDetailClient({
   invoices,
   reminders,
   clientName,
+  timeEntries,
+  activeEntry,
 }: {
   project: Project;
   clients: { id: string; name: string }[];
@@ -29,6 +32,8 @@ export function ProjectDetailClient({
   invoices: Invoice[];
   reminders: Reminder[];
   clientName: string | null;
+  timeEntries: TimeEntry[];
+  activeEntry: TimeEntry | null;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -167,6 +172,12 @@ export function ProjectDetailClient({
               )}
             </CardBody>
           </Card>
+
+          <TimeTracker
+            projectId={project.id}
+            entries={timeEntries}
+            activeEntry={activeEntry}
+          />
 
           <Card>
             <CardHeader title="Files & links" />

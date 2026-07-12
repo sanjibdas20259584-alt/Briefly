@@ -227,6 +227,54 @@ export function AnalyticsClient({ data }: { data: AnalyticsData }) {
           value={`${data.paidInvoices} paid / ${data.totalInvoices}`}
         />
       </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="p-5">
+          <p className="text-sm text-ink-soft">Win rate</p>
+          <p className="mt-2 text-2xl font-semibold text-ink">{data.winRate}%</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-sm text-ink-soft">Avg project value</p>
+          <p className="mt-2 text-2xl font-semibold text-ink">{money(data.avgProjectValue)}</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-sm text-ink-soft">Client lifetime value</p>
+          <p className="mt-2 text-2xl font-semibold text-ink">
+            {data.clientLifetimeValue.length > 0 ? money(data.clientLifetimeValue[0].value) : "—"}
+          </p>
+          {data.clientLifetimeValue.length > 0 && (
+            <p className="mt-1 text-xs text-ink-soft">
+              Top: {data.clientLifetimeValue[0].client}
+            </p>
+          )}
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader title="Revenue by client" description="Paid invoices in period" />
+        <CardBody className="h-72">
+          {data.revenueByClient.length === 0 ? (
+            <EmptyChart label="No paid invoices with clients in this range" />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.revenueByClient}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="client" tick={{ fill: "var(--fg-muted)", fontSize: 12 }} />
+                <YAxis tick={{ fill: "var(--fg-muted)", fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    background: "var(--bg-raised)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 8,
+                  }}
+                  formatter={(v: number) => money(v)}
+                />
+                <Bar dataKey="revenue" fill="#6366f1" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardBody>
+      </Card>
     </div>
   );
 }

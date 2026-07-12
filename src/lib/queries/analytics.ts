@@ -19,6 +19,10 @@ export interface AnalyticsData {
   invoicesByStatus: { status: string; count: number }[];
   projectsByStatus: { status: string; count: number }[];
   projectProgress: { title: string; progress: number }[];
+  revenueByClient: { client: string; revenue: number }[];
+  winRate: number;
+  clientLifetimeValue: { client: string; value: number }[];
+  avgProjectValue: number;
 }
 
 function rangeToDays(range: AnalyticsRange): number {
@@ -42,21 +46,28 @@ export async function getAnalytics(range: AnalyticsRange = "30d"): Promise<Analy
   start.setDate(start.getDate() - days);
   const startISO = start.toISOString();
 
-  const [invoicesRes, allInvoicesRes, projectsRes, clientsRes] = await Promise.all([
+  const [invoicesRes, allInvoicesRes, projectsRes, clientsRes, proposalsRes] = await Promise.all([
     supabase
       .from("invoices")
       .select("*")
       .eq("user_id", user.id)
       .gte("created_at", startISO),
-    supabase.from("invoices").select("status,total,paid_at,created_at").eq("user_id", user.id),
+    supabase
+      .from("invoices")
+      .select("status,total,paid_at,created_at,client_id")
+      .eq("user_id", user.id),
     supabase.from("projects").select("*").eq("user_id", user.id),
-    supabase.from("clients").select("id,status").eq("user_id", user.id),
+    supabase.from("clients").select("id,name").eq("user_id", user.id),
+    supabase.from("proposals").select("status").eq("user_id", user.id),
   ]);
 
   const periodInvoices = invoicesRes.data ?? [];
   const allInvoices = allInvoicesRes.data ?? [];
   const projects = projectsRes.data ?? [];
   const clients = clientsRes.data ?? [];
+  const proposals = proposalsRes.data ?? [];
+
+  const clientNameMap = new Map(clients.map((c) => [c.id, c.name]));
 
   const paidPeriod = periodInvoices.filter((i) => i.status === "paid");
   const totalRevenue = paidPeriod.reduce((s, i) => s + Number(i.total || 0), 0);
@@ -103,6 +114,49 @@ export async function getAnalytics(range: AnalyticsRange = "30d"): Promise<Analy
     .slice(0, 8)
     .map((p) => ({ title: p.title, progress: Number(p.progress || 0) }));
 
+  // Revenue by client (paid invoices in period, grouped by client_id)
+  const revenueByClientMap: Record<string, number> = {};
+  paidPeriod.forEach((inv) => {
+    const cid = inv.client_id;
+    if (!cid) return;
+    revenueByClientMap[cid] = (revenueByClientMap[cid] || 0) + Number(inv.total || 0);
+  });
+  const revenueByClient = Object.entries(revenueByClientMap)
+    .map(([cid, revenue]) => ({
+      client: clientNameMap.get(cid) || "Unassigned",
+      revenue,
+    }))
+    .sort((a, b) => b.revenue - a.revenue);
+
+  // Win rate (accepted proposals / total proposals)
+  const totalProposals = proposals.length;
+  const acceptedProposals = proposals.filter((p) => p.status === "accepted").length;
+  const winRate = totalProposals > 0 ? Math.round((acceptedProposals / totalProposals) * 100) : 0;
+
+  // Client lifetime value (total revenue per client across ALL invoices)
+  const clvMap: Record<string, number> = {};
+  allInvoices
+    .filter((i) => i.status === "paid")
+    .forEach((inv) => {
+      const cid = inv.client_id;
+      if (!cid) return;
+      clvMap[cid] = (clvMap[cid] || 0) + Number(inv.total || 0);
+    });
+  const clientLifetimeValue = Object.entries(clvMap)
+    .map(([cid, value]) => ({
+      client: clientNameMap.get(cid) || "Unassigned",
+      value,
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  // Average project value (total paid revenue / number of projects)
+  const avgProjectValue =
+    projects.length > 0
+      ? allInvoices
+          .filter((i) => i.status === "paid")
+          .reduce((s, i) => s + Number(i.total || 0), 0) / projects.length
+      : 0;
+
   return {
     range,
     totalRevenue,
@@ -128,6 +182,10 @@ export async function getAnalytics(range: AnalyticsRange = "30d"): Promise<Analy
       count,
     })),
     projectProgress,
+    revenueByClient,
+    winRate,
+    clientLifetimeValue,
+    avgProjectValue,
   };
 }
 
@@ -149,5 +207,9 @@ function empty(range: AnalyticsRange): AnalyticsData {
     invoicesByStatus: [],
     projectsByStatus: [],
     projectProgress: [],
+    revenueByClient: [],
+    winRate: 0,
+    clientLifetimeValue: [],
+    avgProjectValue: 0,
   };
 }

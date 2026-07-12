@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { Card, CardHeader, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfileForm } from "@/components/settings/profile-form";
@@ -10,16 +11,19 @@ import { ProviderFormDialog } from "@/components/settings/provider-form-dialog";
 import { ProviderList } from "@/components/settings/provider-list";
 import { ThemeForm } from "@/components/settings/theme-form";
 import { GoogleDriveForm } from "@/components/settings/google-drive-form";
+import { MultiCurrencyForm } from "@/components/settings/multi-currency";
 import type { ModelProviderPublic } from "@/lib/types";
 
 export function SettingsClient({
   ownerName,
   telegramChatId,
   providers,
+  currency,
 }: {
   ownerName: string;
   telegramChatId: string;
   providers: ModelProviderPublic[];
+  currency: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -45,6 +49,16 @@ export function SettingsClient({
         />
         <CardBody className="px-4 sm:px-6">
           <ThemeForm />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Currency"
+          description="Default currency for invoices, proposals, and reports."
+        />
+        <CardBody className="px-4 sm:px-6">
+          <MultiCurrencyForm currentCurrency={currency} />
         </CardBody>
       </Card>
 
@@ -85,6 +99,21 @@ export function SettingsClient({
         />
         <CardBody className="px-4 sm:px-6">
           <GoogleDriveForm />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Import / Export"
+          description="Back up your data or bring it in from another source."
+        />
+        <CardBody className="px-4 sm:px-6">
+          <Link href="/settings/import-export">
+            <Button variant="outline">
+              Open Import / Export
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </CardBody>
       </Card>
 

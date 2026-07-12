@@ -22,6 +22,7 @@ export default async function SettingsPage() {
       ownerName={settings?.owner_name?.trim() || "Sanjib"}
       telegramChatId={settings?.telegram_chat_id ?? ""}
       providers={providers}
+      currency={settings?.currency ?? "USD"}
     />
   );
 }

@@ -1,16 +1,19 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import {
   Search,
   LogOut,
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
+  Keyboard,
 } from "lucide-react";
 import { logoutAction } from "@/lib/actions/auth";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { ShortcutsHelp } from "@/components/ui/shortcuts-help";
+import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 
 const TITLES: Record<string, string> = {
   "": "Dashboard",
@@ -25,6 +28,7 @@ const TITLES: Record<string, string> = {
   activity: "Activity",
   drive: "Google Drive",
   openwa: "WhatsApp",
+  automation: "Automation",
 };
 
 function titleFor(pathname: string): string {
@@ -44,6 +48,21 @@ export function Topbar({
   const pathname = usePathname();
   const router = useRouter();
   const [q, setQ] = useState("");
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  const openShortcuts = useCallback(() => setShortcutsOpen(true), []);
+  const closeShortcuts = useCallback(() => setShortcutsOpen(false), []);
+
+  useKeyboardShortcuts([
+    { key: "/", ctrl: true, description: "Show shortcuts", action: openShortcuts },
+    { key: "k", ctrl: true, description: "Search", action: () => {
+      const input = document.querySelector<HTMLInputElement>('input[placeholder="Search…"]');
+      input?.focus();
+    }},
+    { key: "n", ctrl: true, description: "New client", action: () => router.push("/clients?new=1") },
+    { key: "m", ctrl: true, description: "New project", action: () => router.push("/projects?new=1") },
+    { key: "i", ctrl: true, description: "New invoice", action: () => router.push("/invoices?new=1") },
+  ]);
 
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -95,6 +114,15 @@ export function Topbar({
       </form>
 
       <div className="ml-auto flex items-center gap-2 sm:ml-0">
+        <button
+          type="button"
+          onClick={openShortcuts}
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-border bg-surface-raised text-ink-soft transition-colors hover:bg-surface hover:text-ink"
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts (Ctrl+/)"
+        >
+          <Keyboard className="h-4 w-4" />
+        </button>
         <ThemeToggle compact />
         <span className="hidden text-sm text-ink-soft sm:inline">{ownerName}</span>
         <form action={logoutAction}>
@@ -108,6 +136,8 @@ export function Topbar({
           </button>
         </form>
       </div>
+
+      <ShortcutsHelp open={shortcutsOpen} onClose={closeShortcuts} />
     </header>
   );
 }

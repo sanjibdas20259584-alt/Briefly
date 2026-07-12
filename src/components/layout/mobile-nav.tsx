@@ -26,6 +26,7 @@ const PRIMARY_NAV = [
 const SECONDARY_NAV = [
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/invoices", label: "Invoices", icon: FileText },
+  { href: "/finance", label: "Finance", icon: FileText },
   { href: "/proposals", label: "Proposals", icon: FileText },
   { href: "/reminders", label: "Reminders", icon: Bell },
   { href: "/drive", label: "Google Drive", icon: FolderKanban },

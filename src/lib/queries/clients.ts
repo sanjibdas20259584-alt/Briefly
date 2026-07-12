@@ -1,5 +1,14 @@
 import { getServerSupabase } from "@/lib/supabase/server";
-import type { Client, Note, Project, Invoice, Proposal } from "@/lib/types";
+import type {
+  Client,
+  Note,
+  Project,
+  Invoice,
+  Proposal,
+  Interaction,
+  CustomField,
+  CustomFieldValue,
+} from "@/lib/types";
 
 export async function listClients(query?: string): Promise<Client[]> {
   const supabase = await getServerSupabase();
@@ -16,7 +25,11 @@ export async function listClients(query?: string): Promise<Client[]> {
 
 export async function getClientDetail(id: string) {
   const supabase = await getServerSupabase();
-  const [clientRes, projectsRes, invoicesRes, proposalsRes, notesRes] =
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [clientRes, projectsRes, invoicesRes, proposalsRes, notesRes, interactionsRes] =
     await Promise.all([
       supabase.from("clients").select("*").eq("id", id).single<Client>(),
       supabase
@@ -44,13 +57,44 @@ export async function getClientDetail(id: string) {
         .eq("client_id", id)
         .order("created_at", { ascending: false })
         .limit(20),
+      supabase
+        .from("interactions")
+        .select("*")
+        .eq("client_id", id)
+        .order("created_at", { ascending: false })
+        .limit(100),
     ]);
+
+  let customFields: CustomField[] = [];
+  let customFieldValues: CustomFieldValue[] = [];
+
+  if (user) {
+    const [fieldsRes, valuesRes] = await Promise.all([
+      supabase
+        .from("custom_fields")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("entity_type", "client")
+        .order("position"),
+      supabase
+        .from("custom_field_values")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("entity_id", id),
+    ]);
+    customFields = (fieldsRes.data ?? []) as CustomField[];
+    customFieldValues = (valuesRes.data ?? []) as CustomFieldValue[];
+  }
+
   return {
     client: clientRes.data as Client | null,
     projects: (projectsRes.data ?? []) as Project[],
     invoices: (invoicesRes.data ?? []) as Invoice[],
     proposals: (proposalsRes.data ?? []) as Proposal[],
     notes: (notesRes.data ?? []) as Note[],
+    interactions: (interactionsRes.data ?? []) as Interaction[],
+    customFields,
+    customFieldValues,
     error: (clientRes.error?.message ?? null) as string | null,
   };
 }

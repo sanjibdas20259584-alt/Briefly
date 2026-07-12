@@ -27,6 +27,27 @@ export async function updateProfileAction(prevState: unknown, fd: FormData) {
   return { ok: true } as const;
 }
 
+export async function updateCurrencyAction(currency: string) {
+  const code = currency.trim().toUpperCase();
+  if (!/^[A-Z]{3}$/.test(code)) {
+    return { ok: false, error: "Invalid currency code." } as const;
+  }
+  const supabase = await getServerSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not signed in." } as const;
+
+  const { error } = await supabase
+    .from("app_settings")
+    .update({ currency: code })
+    .eq("user_id", user.id);
+  if (error) return { ok: false, error: error.message } as const;
+  revalidatePath("/settings");
+  revalidatePath("/", "layout");
+  return { ok: true } as const;
+}
+
 export async function updateThemeAction(theme: "light" | "dark" | "system") {
   if (!["light", "dark", "system"].includes(theme)) {
     return { ok: false, error: "Invalid theme." } as const;

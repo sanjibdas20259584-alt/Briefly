@@ -4,7 +4,16 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-const TABS = ["Overview", "Projects", "Invoices", "Proposals", "Notes"] as const;
+const TABS = [
+  "Overview",
+  "Projects",
+  "Invoices",
+  "Proposals",
+  "Interactions",
+  "Custom Fields",
+  "Notes",
+  "Files",
+] as const;
 type Tab = (typeof TABS)[number];
 
 export function ClientDetailTabs({
@@ -12,13 +21,19 @@ export function ClientDetailTabs({
   Projects,
   Invoices,
   Proposals,
+  Interactions,
+  CustomFields,
   Notes,
+  Files,
 }: {
   Overview: ReactNode;
   Projects: ReactNode;
   Invoices: ReactNode;
   Proposals: ReactNode;
+  Interactions: ReactNode;
+  CustomFields: ReactNode;
   Notes: ReactNode;
+  Files: ReactNode;
 }) {
   const [tab, setTab] = useState<Tab>("Overview");
   const map: Record<Tab, ReactNode> = {
@@ -26,7 +41,10 @@ export function ClientDetailTabs({
     Projects,
     Invoices,
     Proposals,
+    Interactions,
+    "Custom Fields": CustomFields,
     Notes,
+    Files,
   };
   return (
     <div>

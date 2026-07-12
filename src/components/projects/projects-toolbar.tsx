@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/input";
 import { ProjectFormDialog } from "./project-form-dialog";
@@ -43,7 +45,13 @@ export function ProjectsToolbar({
         <option value="completed">Completed</option>
         <option value="archived">Archived</option>
       </Select>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
+        <Link href="/projects/kanban">
+          <Button variant="ghost" size="sm">
+            <LayoutGrid className="mr-1.5 h-4 w-4" />
+            Kanban
+          </Button>
+        </Link>
         <Button onClick={() => setOpen(true)}>New project</Button>
       </div>
       <ProjectFormDialog

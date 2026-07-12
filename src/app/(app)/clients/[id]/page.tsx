@@ -1,14 +1,20 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
-import { ArrowLeft, Mail, Phone, Globe, ExternalLink } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Globe, ExternalLink, LinkIcon } from "lucide-react";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { getClientDetail } from "@/lib/queries/clients";
 import { Card, CardBody } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { ClientDetailTabs } from "@/components/clients/client-detail-tabs";
 import { ClientActionsBar } from "@/components/clients/client-actions-bar";
 import { NoteEditor } from "@/components/clients/note-editor";
+import { InteractionsTab } from "@/components/clients/interactions-tab";
+import { CustomFields } from "@/components/clients/custom-fields";
+import { FileList } from "@/components/files/file-list";
+import { listFileAttachments } from "@/lib/actions/file-attachments";
+import { getPortalTokens } from "@/lib/actions/portal";
 import { formatDate, formatMoney } from "@/lib/utils";
 
 export default async function ClientDetailPage({
@@ -22,9 +28,14 @@ export default async function ClientDetailPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { client, projects, invoices, proposals, notes, error } =
+  const { client, projects, invoices, proposals, notes, interactions, customFields, customFieldValues, error } =
     await getClientDetail((await params).id);
   if (!client || error) notFound();
+
+  const [files, portalTokens] = await Promise.all([
+    listFileAttachments("client", client.id),
+    getPortalTokens(client.id),
+  ]);
 
   const SocialRow = ({ label, value }: { label: string; value?: string | null }) =>
     value ? (
@@ -173,6 +184,51 @@ export default async function ClientDetailPage({
     </div>
   );
 
+  const Interactions = (
+    <InteractionsTab interactions={interactions} clientId={client.id} />
+  );
+
+  const CustomFieldsTabContent = (
+    <CustomFields fields={customFields} values={customFieldValues} entityId={client.id} />
+  );
+
+  const FilesTab = (
+    <div className="space-y-6">
+      {/* Portal Link Section */}
+      <Card>
+        <CardBody className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-ink">Client Portal</h3>
+              <p className="text-xs text-ink-soft">
+                Share a secure link with your client to view their data
+              </p>
+            </div>
+            <Link href={`/portal/${portalTokens[0]?.token ?? ""}`} target="_blank">
+              <Button variant="secondary" size="sm">
+                <LinkIcon className="mr-1 h-4 w-4" />
+                Open Portal
+              </Button>
+            </Link>
+          </div>
+          {portalTokens.length > 0 && (
+            <div className="rounded-lg bg-surface p-3">
+              <p className="text-xs text-ink-muted break-all">
+                {`/portal/${portalTokens[0].token}`}
+              </p>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+
+      {/* File Attachments */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-ink">Attachments</h3>
+        <FileList entityType="client" entityId={client.id} initialFiles={files} />
+      </div>
+    </div>
+  );
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -196,7 +252,10 @@ export default async function ClientDetailPage({
         Projects={ProjectsTab}
         Invoices={InvoicesTab}
         Proposals={ProposalsTab}
+        Interactions={Interactions}
+        CustomFields={CustomFieldsTabContent}
         Notes={NotesTab}
+        Files={FilesTab}
       />
     </div>
   );

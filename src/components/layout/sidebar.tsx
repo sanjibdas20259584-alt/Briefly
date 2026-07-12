@@ -9,6 +9,7 @@ import {
   FileText,
   FileSignature,
   Bell,
+  Calendar,
   Bot,
   Settings,
   Sparkles,
@@ -17,6 +18,8 @@ import {
   ChevronRight,
   HardDrive,
   MessageSquare,
+  Zap,
+  DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,12 +28,15 @@ const NAV = [
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/invoices", label: "Invoices", icon: FileText },
+  { href: "/finance", label: "Finance", icon: DollarSign },
   { href: "/proposals", label: "Proposals", icon: FileSignature },
   { href: "/reminders", label: "Reminders", icon: Bell },
+  { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/drive", label: "Google Drive", icon: HardDrive },
   { href: "/openwa", label: "WhatsApp", icon: MessageSquare },
   { href: "/chatbot", label: "Assistant", icon: Bot },
   { href: "/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/automation", label: "Automation", icon: Zap },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
