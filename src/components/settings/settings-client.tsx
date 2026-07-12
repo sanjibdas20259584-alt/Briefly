@@ -23,9 +23,9 @@ export function SettingsClient({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-ink">Settings</h1>
+        <h1 className="text-lg sm:text-xl font-semibold text-ink">Settings</h1>
         <p className="mt-1 text-sm text-ink-soft">
           Personalize Briefly and connect services.
         </p>
@@ -33,7 +33,7 @@ export function SettingsClient({
 
       <Card>
         <CardHeader title="Profile" description="Your name shows across the app." />
-        <CardBody>
+        <CardBody className="px-4 sm:px-6">
           <ProfileForm ownerName={ownerName} />
         </CardBody>
       </Card>
@@ -41,42 +41,38 @@ export function SettingsClient({
       <Card>
         <CardHeader
           title="Appearance"
-          description="Light, dark, or match your system. Default is System."
+          description="Light, dark, or match your system."
         />
-        <CardBody>
+        <CardBody className="px-4 sm:px-6">
           <ThemeForm />
         </CardBody>
       </Card>
 
       <Card>
         <CardHeader
-          title="Telegram reminders"
-          description="Get pings from your bot. Find your chat id via @userinfobot."
+          title="Telegram"
+          description="Connect your bot for AI chat and reminders."
         />
-        <CardBody>
+        <CardBody className="px-4 sm:px-6">
           <TelegramForm chatId={telegramChatId} />
         </CardBody>
       </Card>
 
       <Card>
         <CardHeader
-          title="Model providers"
-          description="OpenAI-compatible endpoints for your assistant. Keys are encrypted. Connection is tested before save."
+          title="AI Model"
+          description="OpenAI-compatible endpoint for the assistant."
           action={
             <Button size="sm" onClick={() => setOpen(true)}>
-              <Plus className="mr-1 h-4 w-4" /> Add provider
+              <Plus className="mr-1 h-4 w-4" /> Add
             </Button>
           }
         />
-        <CardBody>
+        <CardBody className="px-4 sm:px-6">
           <ProviderList providers={providers} />
           {providers.length === 0 && (
             <p className="mt-3 text-sm text-ink-soft">
-              No providers yet. Add your local model at{" "}
-              <code className="rounded bg-surface px-1 text-xs">
-                http://localhost:20128/v1
-              </code>{" "}
-              to use the Assistant.
+              No providers configured. Add one to use the Assistant.
             </p>
           )}
         </CardBody>
@@ -85,9 +81,9 @@ export function SettingsClient({
       <Card>
         <CardHeader
           title="Google Drive"
-          description="Give your AI assistant full access to your Drive files."
+          description="AI access to your Drive files."
         />
-        <CardBody>
+        <CardBody className="px-4 sm:px-6">
           <GoogleDriveForm />
         </CardBody>
       </Card>
