@@ -122,7 +122,7 @@ export function ChatWindow({ ctx }: { ctx: ChatCtx }) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] flex-col rounded-2xl border border-surface-border bg-surface-raised shadow-card">
+    <div className="flex h-[calc(100vh-5rem-env(safe-area-inset-bottom,0px))] flex-col rounded-2xl border border-surface-border bg-surface-raised shadow-card">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-surface-border px-4 py-3">
         <div className="flex items-center gap-2.5">

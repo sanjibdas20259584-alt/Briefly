@@ -177,6 +177,27 @@ body {
 
 /* ─── Liquid Glass Mobile Nav ─────────────────────────────────────────── */
 
+.mobile-nav-glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 -4px 24px rgba(0, 0, 0, 0.06),
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .mobile-nav-glass {
+  background: rgba(28, 25, 23, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 -4px 24px rgba(0, 0, 0, 0.3),
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Legacy glass-bar for other glass elements */
 .glass-bar {
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(20px) saturate(180%);
@@ -242,7 +263,7 @@ body {
 
 @media (max-width: 767px) {
   main {
-    padding-bottom: 7rem !important;
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
     padding-left: 1rem !important;
     padding-right: 1rem !important;
   }
@@ -256,11 +277,6 @@ body {
   .truncate, .line-clamp-1, .line-clamp-2, .line-clamp-3 {
     word-break: break-word;
     overflow-wrap: break-word;
-  }
-
-  /* Card spacing */
-  .rounded-2xl {
-    border-radius: 1rem;
   }
 
   /* Better list item spacing */

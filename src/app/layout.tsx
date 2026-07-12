@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Briefly",
   description: "Your private freelancing workspace, Sanjib.",
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
 };
 
 const themeInitScript = `
